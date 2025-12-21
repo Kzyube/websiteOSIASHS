@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osias High School | Student Help Desk</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-main: #2b2d42;
+            --text-sub: #8d99ae;
+        }
+
+        /* 1. Alive Background */
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 2. Floating Navigation */
+        .floating-nav {
+            position: fixed;
+            top: 25px;
+            left: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-pill {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .nav-pill:hover, .nav-pill.active {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* 3. Layout Grid */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 60px auto 0 auto;
+        }
+
+        /* 4. Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover { transform: translateY(-5px); }
+
+        h2 { font-weight: 800; color: var(--primary); margin-top: 0; margin-bottom: 10px; }
+        h4 { font-weight: 700; color: var(--text-main); margin-bottom: 15px; }
+        p { color: #666; line-height: 1.6; font-size: 0.95rem; }
+
+        /* 5. Form Styling */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main); font-size: 0.9rem; }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.6);
+            font-family: inherit; font-size: 1rem;
+            box-sizing: border-box;
+            transition: 0.3s;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background: white;
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.2);
+        }
+
+        /* 6. Buttons */
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(67, 97, 238, 0.4);
+            transition: all 0.3s ease;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(67, 97, 238, 0.5); }
+
+        .btn-small { padding: 8px 15px; font-size: 0.85rem; background: #e0e7ff; color: var(--primary); border-radius: 8px; border:none; cursor: pointer; font-weight: 600; }
+        .btn-small:hover { background: #c7d2fe; }
+
+        /* 7. GWA Calculator Specifics */
+        .grade-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .grade-row input:first-child { flex: 2; }
+        .grade-row input:last-child { flex: 1; text-align: center; font-weight: 700; color: var(--primary); }
+        
+        .gwa-result-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            animation: slideDown 0.4s ease;
+        }
+        .gwa-high { background: #d1fae5; color: #065f46; border: 1px solid #34d399; } /* Green */
+        .gwa-mid { background: #fff7ed; color: #9a3412; border: 1px solid #fb923c; } /* Orange */
+        .gwa-score { font-size: 2.5rem; font-weight: 800; display: block; margin: 5px 0; }
+
+        /* 8. Smart Field Animation */
+        .smart-field {
+            background: #eef2ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .floating-nav { top: 15px; left: 50%; transform: translateX(-50%); width: max-content; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="floating-nav">
+        <a href="index.html" class="nav-pill">
+            <i class="fas fa-home"></i> Home
+        </a>
+        <a href="registrar.html" class="nav-pill">
+            <i class="fas fa-file-signature"></i> Registrar
+        </a>
+        <a href="#" class="nav-pill active">
+            <i class="fas fa-life-ring"></i> Help
+        </a>
+    </nav>
+
+    <div class="main-container">
+        
+        <div class="glass-card">
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                <div style="width:50px; height:50px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div>
+                    <h2>Submit a Ticket</h2>
+                    <p style="margin:0;">Request documents or report issues.</p>
+                </div>
+            </div>
+
+            <form id="ticketForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="stName" placeholder="Juan Dela Cruz" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Student ID</label>
+                        <input type="text" id="stID" placeholder="xxxxxxxxxxxx" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Issue / Request Category</label>
+                    <select id="issueType" onchange="handleSmartFields()">
+                        <option value="" selected disabled>Select an option...</option>
+                        <optgroup label="Document Requests">
+                            <option value="Form 137 Request">Request Form 137 (Permanent Record)</option>
+                            <option value="Good Moral Certificate">Request Cert. of Good Moral</option>
+                            <option value="Report Card">Request Report Card (Form 138)</option>
+                            <option value="Diploma">Request Diploma Copy</option>
+                        </optgroup>
+                        <optgroup label="Academic & Enrollment">
+                            <option value="Grade Discrepancy">Grade Discrepancy</option>
+                            <option value="Section Transfer">Request Section Transfer</option>
+                        </optgroup>
+                        <optgroup label="Account & ID">
+                            <option value="ID Replacement">School ID Replacement</option>
+                            <option value="Login Issue">Forgot Password</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="smartContainer" class="smart-field">
+                    <label id="smartLabel" style="color:var(--primary);">Additional Info</label>
+                    <input type="text" id="smartInput">
+                </div>
+
+                <div class="form-group" style="margin-top:20px;">
+                    <label>Description / Specifics</label>
+                    <textarea id="issueDesc" rows="4" placeholder="Please describe your request details..." required></textarea>
+                </div>
+
+                <button type="button" class="btn-primary" onclick="generateTicketPDF()">
+                    <i class="fas fa-file-download"></i> Generate Receipt
+                </button>
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="width:50px; height:50px; background:#10b981; color:white; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:1.2rem; margin-bottom:10px;">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h4>GWA Calculator</h4>
+                <p>Check if you qualify for the Honor Roll (90+).</p>
+            </div>
+
+            <div id="gradeInputs">
+                <div class="grade-row">
+                    <input type="text" placeholder="Subject (e.g. Math)">
+                    <input type="number" class="grade-val" placeholder="85">
+                </div>
+                <div class="grade-row">
+                    <input type="text" placeholder="Subject (e.g. English)">
+                    <input type="number" class="grade-val" placeholder="88">
+                </div>
+                <div class="grade-row">
+                    <input type="text" placeholder="Subject (e.g. Science)">
+                    <input type="number" class="grade-val" placeholder="90">
+                </div>
+                <div class="grade-row">
+                    <input type="text" placeholder="Subject (e.g. History)">
+                    <input type="number" class="grade-val" placeholder="92">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:15px;">
+                <button type="button" class="btn-small" onclick="addGradeRow()">+ Add Subject</button>
+                <button type="button" class="btn-small" style="background:var(--primary); color:white;" onclick="calculateGWA()">Calculate</button>
+            </div>
+
+            <div id="gwaResult" class="gwa-result-box">
+                <span id="gwaText" style="font-weight:600; font-size:0.9rem;">AVERAGE</span>
+                <span id="gwaScore" class="gwa-score">0.00</span>
+                <p id="gwaMessage" style="font-size:0.85rem; margin-bottom:0;"></p>
+            </div>
+
+            <div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px;">
+                <h4 style="font-size:1rem; color:var(--text-main);">Quick FAQs</h4>
+                <div style="font-size:0.85rem; color:#666;">
+                    <p style="margin-bottom:8px;"><strong><i class="fas fa-question-circle"></i> Office Hours?</strong><br>Mon-Fri, 8:00 AM - 4:00 PM</p>
+                    <p style="margin-bottom:8px;"><strong><i class="fas fa-clock"></i> Processing Time?</strong><br>Documents take 3-5 working days.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <img src="images/logoOSIAS.png" id="pdfLogo" style="display:none;" alt="logo">
+
+    <script>
+        // --- 1. SMART FIELD LOGIC ---
+        function handleSmartFields() {
+            const type = document.getElementById('issueType').value;
+            const container = document.getElementById('smartContainer');
+            const label = document.getElementById('smartLabel');
+            const input = document.getElementById('smartInput');
+
+            container.style.display = 'none'; // Hide by default
+
+            if (type.includes("Discrepancy")) {
+                container.style.display = 'block';
+                label.innerText = "Which Subject & Grading Period?";
+                input.placeholder = "e.g., Math 10, 2nd Quarter";
+            } else if (type.includes("Form 137") || type.includes("Diploma")) {
+                container.style.display = 'block';
+                label.innerText = "Last School Year Attended";
+                input.placeholder = "e.g., SY 2022-2023";
+            } else if (type.includes("ID")) {
+                container.style.display = 'block';
+                label.innerText = "Emergency Contact Person";
+                input.placeholder = "Name & Phone Number";
+            }
+        }
+
+        // --- 2. GWA CALCULATOR LOGIC ---
+        function addGradeRow() {
+            const div = document.createElement('div');
+            div.className = 'grade-row';
+            div.innerHTML = `
+                <input type="text" placeholder="Subject">
+                <input type="number" class="grade-val" placeholder="0">
+            `;
+            document.getElementById('gradeInputs').appendChild(div);
+        }
+
+        function calculateGWA() {
+            const inputs = document.querySelectorAll('.grade-val');
+            let total = 0;
+            let count = 0;
+
+            inputs.forEach(inp => {
+                const val = parseFloat(inp.value);
+                if (val && val > 0) {
+                    total += val;
+                    count++;
+                }
+            });
+
+            const resultBox = document.getElementById('gwaResult');
+            const scoreDisplay = document.getElementById('gwaScore');
+            const msgDisplay = document.getElementById('gwaMessage');
+
+            if (count === 0) return alert("Please enter at least one grade.");
+
+            const average = total / count;
+            const formatted = average.toFixed(2);
+
+            resultBox.style.display = 'block';
+            scoreDisplay.innerText = formatted;
+
+            if (average >= 90) {
+                resultBox.className = 'gwa-result-box gwa-high';
+                msgDisplay.innerText = "Excellent! You qualify for the Honor Roll.";
+            } else {
+                resultBox.className = 'gwa-result-box gwa-mid';
+                msgDisplay.innerText = "Keep working hard! You are doing great.";
+            }
+        }
+
+        // --- 3. PDF GENERATION LOGIC ---
+        function generateTicketPDF() {
+            const name = document.getElementById('stName').value;
+            const id = document.getElementById('stID').value;
+            const type = document.getElementById('issueType').value;
+            const desc = document.getElementById('issueDesc').value;
+
+            if(!name || !type) return alert("Please fill in Name and Issue Type.");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: [100, 150] }); // Small ticket format
+
+            // Header
+            doc.setFillColor(67, 97, 238); // Primary Blue
+            doc.rect(0, 0, 100, 20, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12); doc.setFont("helvetica", "bold");
+            doc.text("OSIAS HIGH SCHOOL", 50, 8, null, null, "center");
+            doc.setFontSize(8); doc.setFont("helvetica", "normal");
+            doc.text("Help Desk Ticket Receipt", 50, 15, null, null, "center");
+
+            // Content
+            let y = 30;
+            doc.setTextColor(0, 0, 0);
+            
+            doc.setFontSize(8); doc.text("Ticket Reference:", 10, y);
+            doc.setFontSize(10); doc.setFont("helvetica", "bold");
+            doc.text("#TK-" + Math.floor(Math.random()*90000), 10, y+5); y += 15;
+
+            doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text("Student Name:", 10, y);
+            doc.setFont("helvetica", "bold"); doc.text(name, 40, y); y += 6;
+
+            doc.setFont("helvetica", "normal"); doc.text("Student ID:", 10, y);
+            doc.setFont("helvetica", "bold"); doc.text(id, 40, y); y += 10;
+
+            doc.setLineWidth(0.5); doc.line(10, y, 90, y); y += 10;
+
+            doc.setFont("helvetica", "normal"); doc.text("Request Type:", 10, y);
+            doc.setFont("helvetica", "bold"); doc.text(type, 10, y+5); y += 15;
+
+            doc.setFont("helvetica", "normal"); doc.text("Description:", 10, y);
+            
+            // Text Wrapping for Description
+            const splitDesc = doc.splitTextToSize(desc, 80);
+            doc.setFont("helvetica", "italic");
+            doc.text(splitDesc, 10, y+5);
+
+            // Footer
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(7); doc.setTextColor(150);
+            doc.text("Present this digital receipt to the Registrar/Admin office.", 50, pageHeight - 10, null, null, "center");
+
+            doc.save("HelpTicket_Osias.pdf");
+        }
+    </script>
+</body>
+</html>

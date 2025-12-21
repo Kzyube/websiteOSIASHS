@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osias High School | Fee Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --success: #4cc9f0;
+            --text-main: #2b2d42;
+            --text-sub: #8d99ae;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        /* 1. Alive Background */
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            position: relative; /* For absolute positioning of nav */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- NEW: FLOATING NAVBAR STYLES --- */
+        .floating-nav {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-pill {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-pill:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .nav-pill i { font-size: 1rem; }
+
+        /* Mobile adjust for nav */
+        @media (max-width: 600px) {
+            body { padding-top: 80px; align-items: flex-start; }
+            .floating-nav { top: 15px; left: 50%; transform: translateX(-50%); width: max-content; }
+        }
+        /* --- END NAV STYLES --- */
+
+        /* 2. Glass Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden; 
+        }
+        
+        /* --- ANNOUNCEMENT BAR --- */
+        #announcement-bar {
+            display: none; 
+            background: rgba(255, 241, 242, 0.95);
+            border-left: 5px solid #e11d48;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.15);
+            animation: slideInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .announce-icon {
+            color: #e11d48;
+            font-size: 1.4rem;
+            margin-top: 2px;
+            animation: bell-shake 2.5s infinite;
+            transform-origin: top center;
+        }
+
+        .announce-content h4 {
+            margin: 0 0 4px 0;
+            color: #be123c;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+        }
+
+        .announce-content p {
+            margin: 0;
+            color: #881337;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes bell-shake {
+            0% { transform: rotate(0); }
+            5% { transform: rotate(20deg); }
+            10% { transform: rotate(-15deg); }
+            15% { transform: rotate(10deg); }
+            20% { transform: rotate(-5deg); }
+            25% { transform: rotate(0); }
+            100% { transform: rotate(0); } 
+        }
+
+        /* 3. Header & Logo */
+        .header-section { text-align: center; margin-bottom: 30px; }
+        .logo-container {
+            width: 90px; height: 90px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .logo-img { width: 80%; height: auto; object-fit: contain; }
+        
+        h2 { margin: 0; color: var(--text-main); font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px; }
+        .school-sub { color: var(--text-sub); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+        
+        /* Clock Style */
+        .live-clock {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* 4. Inputs */
+        .input-group { position: relative; margin-bottom: 20px; }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 16px;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.6);
+            font-family: inherit; font-size: 1rem; color: var(--text-main);
+            box-sizing: border-box; transition: 0.3s;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05);
+        }
+        input:focus {
+            background: white; border-color: var(--primary); outline: none;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-primary {
+            width: 100%; padding: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; border-radius: 16px;
+            font-weight: 600; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(67, 97, 238, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(67, 97, 238, 0.5); }
+
+        .btn-outline {
+            width: 100%; padding: 15px; margin-top: 15px;
+            background: transparent;
+            color: var(--primary); 
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-outline:hover { background: rgba(67, 97, 238, 0.1); transform: translateY(-2px); }
+
+        /* 5. Student ID Card Design */
+        .student-id-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
+            border-left: 5px solid var(--primary);
+            padding: 20px; border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            animation: fadeIn 0.6s ease;
+        }
+        .id-avatar {
+            width: 50px; height: 50px; background: var(--primary);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.2rem;
+        }
+        
+        /* 6. Fee List & Toggles */
+        .fee-item {
+            background: rgba(255,255,255,0.5);
+            padding: 15px; border-radius: 16px;
+            margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s; border: 1px solid transparent;
+        }
+        .fee-item.active {
+            background: white; border-color: var(--primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .toggle-switch {
+            position: relative; width: 50px; height: 28px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .fee-details { display: flex; flex-direction: column; }
+        .fee-label { font-weight: 600; font-size: 1rem; }
+        .fee-badge {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+            width: fit-content; margin-top: 4px; font-weight: 700; text-transform: uppercase;
+        }
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+
+        .pay-input {
+            width: 100px !important; text-align: right;
+            font-weight: 700; color: var(--primary) !important;
+        }
+
+        /* 7. Total Bar */
+        .total-bar {
+            margin-top: 25px; padding: 20px;
+            background: var(--text-main);
+            border-radius: 16px; color: white;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .total-label { opacity: 0.8; font-size: 0.9rem; }
+        .total-value { font-size: 1.5rem; font-weight: 800; }
+
+        /* Animations & Utilities */
+        .hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .spinner {
+            width: 40px; height: 40px; margin: 20px auto;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <nav class="floating-nav">
+        <a href="index.html" class="nav-pill">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </nav>
+
+    <div class="glass-card">
+        
+        <div id="announcement-bar">
+            <div class="announce-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="announce-content">
+                <h4>Admin Notice</h4>
+                <p id="announcement-text">Loading...</p>
+            </div>
+        </div>
+        <div class="header-section">
+            <div class="logo-container">
+                <img src="images/logoOSIAS.png" alt="School Logo" class="logo-img" id="schoolLogo">
+            </div>
+            <h2>OSIAS HIGH SCHOOL</h2>
+            <div class="school-sub">Student Fees & Payments Portal</div>
+            <div id="liveClock" class="live-clock">Loading Date & Time...</div>
+        </div>
+
+        <div id="searchView">
+            <div class="input-group">
+                <input type="text" id="lrnInput" placeholder="Enter Student LRN (e.g., 100234)">
+            </div>
+            <button class="btn-primary" onclick="checkBalance()">Search Records</button>
+        </div>
+
+        <div id="loadingView" class="hidden">
+            <div class="spinner"></div>
+            <p style="text-align:center; color: var(--text-sub);">Securely fetching data...</p>
+        </div>
+
+        <div id="resultView" class="hidden">
+            
+            <div class="student-id-card">
+                <div class="id-avatar" id="avatarInitials">ST</div>
+                <div>
+                    <div style="font-size: 0.8rem; color: #666; font-weight: 600;">STUDENT</div>
+                    <div id="studentName" style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">Student Name</div>
+                    <div style="font-size: 0.85rem; color: var(--text-sub);">LRN: <span id="displayLRN"></span></div>
+                </div>
+            </div>
+
+            <form id="feeForm">
+                
+                <div class="fee-item" id="row_pta">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chk_pta" onchange="toggleFee('chk_pta','in_pta','max_pta','row_pta')">
+                            <span class="slider"></span>
+                        </label>
+                        <div class="fee-details">
+                            <span class="fee-label">PTA Fee</span>
+                            <span id="stat_pta" class="fee-badge status-pending">Loading...</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="max_pta">
+                    <input type="number" id="in_pta" class="pay-input" disabled oninput="calcTotal()" placeholder="0.00">
+                </div>
+
+                <div class="fee-item" id="row_misc">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chk_misc" onchange="toggleFee('chk_misc','in_misc','max_misc','row_misc')">
+                            <span class="slider"></span>
+                        </label>
+                        <div class="fee-details">
+                            <span class="fee-label">Misc Fee</span>
+                            <span id="stat_misc" class="fee-badge status-pending">Loading...</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="max_misc">
+                    <input type="number" id="in_misc" class="pay-input" disabled oninput="calcTotal()" placeholder="0.00">
+                </div>
+
+                <div class="fee-item" id="row_id">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chk_id" onchange="toggleFee('chk_id','in_id','max_id','row_id')">
+                            <span class="slider"></span>
+                        </label>
+                        <div class="fee-details">
+                            <span class="fee-label">ID Lanyard</span>
+                            <span id="stat_id" class="fee-badge status-pending">Loading...</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="max_id">
+                    <input type="number" id="in_id" class="pay-input" disabled oninput="calcTotal()" placeholder="0.00">
+                </div>
+
+            </form>
+
+            <div class="total-bar">
+                <span class="total-label">Total Payment</span>
+                <span class="total-value">₱<span id="totalTxt">0.00</span></span>
+            </div>
+
+            <button class="btn-primary" onclick="processPayment()" style="margin-top: 20px; background: #2a9d8f;">Generate Official Ticket</button>
+            
+            <button class="btn-outline" onclick="generateSOA()">
+                <i class="fas fa-file-pdf"></i> Download Statement of Account
+            </button>
+
+            <p style="text-align: center; font-size: 0.8rem; color: var(--text-sub); margin-top: 15px; cursor:pointer;" onclick="location.reload()">Cancel / Search Again</p>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // PASTE YOUR NEW UNITED WEB APP URL HERE!
+        // ----------------------------------------------------
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlFOu-d4cvNfMB4j6kIIv0dgEXvczDcSiU7--6Gemdtu4ctxxD2nK4ML-KiegTr1fp/exec"; 
+        
+        let gName = "", gLRN = "";
+        let gStudentData = null; 
+
+        window.onload = function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            if(WEB_APP_URL.includes("PASTE_YOUR")) {
+                alert("Reminder: You need to paste your Google Script URL in the code!");
+                return;
+            }
+
+            fetch(WEB_APP_URL + "?action=getAnnouncement")
+            .then(response => response.json())
+            .then(data => {
+                if (data.message && data.message.trim() !== "") {
+                    document.getElementById('announcement-text').innerText = data.message;
+                    const bar = document.getElementById('announcement-bar');
+                    bar.style.display = 'flex';
+                }
+            })
+            .catch(e => console.log("Announcement Error:", e));
+        };
+
+        function updateClock() {
+            const now = new Date();
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' };
+            const timeString = now.toLocaleString('en-US', options);
+            const clockEl = document.getElementById('liveClock');
+            if(clockEl) clockEl.innerText = timeString;
+        }
+
+        function getLogoBase64() {
+            const img = document.getElementById('schoolLogo');
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            try {
+                return canvas.toDataURL("image/png");
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function getQRCodeBase64(text) {
+            const qr = new QRious({
+                value: text,
+                size: 200,
+                level: 'H'
+            });
+            return qr.toDataURL();
+        }
+
+        function checkBalance() {
+            const lrn = document.getElementById('lrnInput').value.trim();
+            if(!lrn) return alert("Please enter a valid LRN");
+
+            document.getElementById('searchView').classList.add('hidden');
+            document.getElementById('loadingView').classList.remove('hidden');
+
+            fetch(WEB_APP_URL + "?lrn=" + lrn)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('loadingView').classList.add('hidden');
+                    if(data.found) {
+                        gName = data.name;
+                        gLRN = lrn;
+                        gStudentData = data; 
+                        renderData(data);
+                    } else {
+                        alert("LRN not found in database.");
+                        document.getElementById('searchView').classList.remove('hidden');
+                    }
+                })
+                .catch(e => {
+                    console.error("Fetch Error:", e);
+                    alert("Connection Error. Please check your internet or the Script URL.");
+                    document.getElementById('loadingView').classList.add('hidden');
+                    document.getElementById('searchView').classList.remove('hidden');
+                });
+        }
+
+        function renderData(d) {
+            document.getElementById('resultView').classList.remove('hidden');
+            document.getElementById('studentName').innerText = d.name;
+            document.getElementById('displayLRN').innerText = gLRN;
+            
+            const initials = d.name.split(" ").map(n=>n[0]).join("").substring(0,2);
+            document.getElementById('avatarInitials').innerText = initials;
+
+            setupFee("chk_pta", "in_pta", "stat_pta", "max_pta", d.pta_fee, d.pta_stat || d.pta_status);
+            setupFee("chk_misc", "in_misc", "stat_misc", "max_misc", d.misc_fee, d.misc_stat || d.misc_status);
+            setupFee("chk_id", "in_id", "stat_id", "max_id", d.id_fee, d.id_stat || d.id_status);
+            
+            calcTotal();
+        }
+
+        function setupFee(chkId, inId, statId, maxId, amt, status) {
+            const lbl = document.getElementById(statId);
+            const input = document.getElementById(inId);
+            const chk = document.getElementById(chkId);
+            const max = document.getElementById(maxId);
+            
+            max.value = amt;
+            const safeStatus = status ? status.toLowerCase() : "pending";
+
+            if(safeStatus === 'paid') {
+                lbl.innerText = "PAID";
+                lbl.className = "fee-badge status-paid";
+                chk.disabled = true; input.disabled = true;
+                input.value = ""; input.placeholder = "Paid";
+                chk.checked = false; 
+            } else {
+                lbl.innerText = `Balance: ₱${amt}`;
+                lbl.className = "fee-badge status-pending";
+                chk.disabled = false; input.disabled = true;
+                input.value = ""; input.placeholder = amt;
+                chk.checked = false;
+            }
+        }
+
+        function toggleFee(chkId, inId, maxId, rowId) {
+            const chk = document.getElementById(chkId);
+            const input = document.getElementById(inId);
+            const row = document.getElementById(rowId);
+            const max = document.getElementById(maxId).value;
+
+            if(chk.checked) {
+                input.disabled = false;
+                input.value = max;
+                row.classList.add('active');
+                input.focus();
+            } else {
+                input.disabled = true;
+                input.value = "";
+                row.classList.remove('active');
+            }
+            calcTotal();
+        }
+
+        function calcTotal() {
+            let sum = 0;
+            ["in_pta", "in_misc", "in_id"].forEach((id, idx) => {
+                const el = document.getElementById(id);
+                const max = parseFloat(document.getElementById(["max_pta", "max_misc", "max_id"][idx]).value);
+                
+                if(!el.disabled && el.value) {
+                    let val = parseFloat(el.value);
+                    if(val > max) { val = max; el.value = max; }
+                    if(val < 0) { val = 0; el.value = 0; }
+                    sum += val;
+                }
+            });
+            document.getElementById('totalTxt').innerText = sum.toLocaleString(undefined, {minimumFractionDigits: 2});
+        }
+
+        function processPayment() {
+            const items = [];
+            let total = 0;
+            
+            if(document.getElementById('chk_pta').checked) items.push({name: "PTA Fee", amt: document.getElementById('in_pta').value});
+            if(document.getElementById('chk_misc').checked) items.push({name: "Misc Fee", amt: document.getElementById('in_misc').value});
+            if(document.getElementById('chk_id').checked) items.push({name: "ID Lanyard", amt: document.getElementById('in_id').value});
+
+            items.forEach(i => total += parseFloat(i.amt || 0));
+
+            if(total <= 0) return alert("Select at least one fee to pay.");
+
+            const ticketNo = "T-" + Math.floor(100000 + Math.random() * 900000);
+            
+            const payload = {
+                action: 'recordPayment', 
+                lrn: gLRN, name: gName, total: total,
+                fees: items.map(i=>`${i.name}(${i.amt})`).join(", ")
+            };
+            
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+
+            generateReceipt(ticketNo, items, total);
+        }
+
+        function generateReceipt(ticketNo, items, total) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: [80, 220] });
+            const centerX = 40;
+            let y = 10;
+            const currentDateTime = new Date().toLocaleString('en-US'); 
+
+            const logoData = getLogoBase64();
+            if(logoData) {
+                doc.addImage(logoData, 'PNG', 32, y, 16, 16); 
+                y += 18;
+            } else { y += 5; }
+
+            doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+            doc.text("OSIAS HIGH SCHOOL", centerX, y, null, null, "center"); y += 5;
+            doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+            doc.text("Treasury Department", centerX, y, null, null, "center"); y += 10;
+            doc.setLineWidth(0.5); doc.line(5, y, 75, y); y += 6;
+            doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+            doc.text("PAYMENT TICKET", centerX, y, null, null, "center"); y += 8;
+
+            doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+            doc.text(`Issued: ${currentDateTime}`, 5, y); y += 4; 
+            doc.text(`Ticket #: ${ticketNo}`, 5, y); y += 6;
+            doc.setFont("helvetica", "bold");
+            doc.text(`Student: ${gName.substring(0,25)}`, 5, y); y += 4;
+            doc.text(`LRN: ${gLRN}`, 5, y); y += 6;
+
+            doc.setLineWidth(0.2); doc.line(5, y, 75, y); y += 5;
+            
+            items.forEach(i => {
+                const amt = parseFloat(i.amt).toFixed(2);
+                doc.setFont("helvetica", "normal");
+                doc.text(i.name, 5, y);
+                doc.setFont("helvetica", "bold");
+                doc.text(amt, 75, y, null, null, "right");
+                y += 5;
+            });
+
+            doc.line(5, y, 75, y); y += 8;
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
+            doc.text("TOTAL:", 5, y);
+            doc.text("P " + total.toFixed(2), 75, y, null, null, "right"); y += 10;
+
+            const qrData = getQRCodeBase64(gLRN); 
+            doc.addImage(qrData, 'JPEG', 25, y, 30, 30);
+            y += 35;
+
+            doc.setFontSize(7); doc.setFont("helvetica", "italic");
+            doc.text("Present this QR to the registrar.", centerX, y, null, null, "center"); y += 4;
+            doc.text("Official Receipt issued upon payment.", centerX, y, null, null, "center");
+
+            doc.save(`Ticket_${gLRN}.pdf`);
+        }
+
+        function generateSOA() {
+            if(!gStudentData) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const w = 210;
+            const centerX = w / 2;
+            let y = 20;
+            const currentDateTime = new Date().toLocaleString('en-US'); 
+
+            const logoData = getLogoBase64();
+            if(logoData) {
+                doc.addImage(logoData, 'PNG', 20, 15, 25, 25);
+            }
+            
+            doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+            doc.text("OSIAS HIGH SCHOOL", centerX, y, null, null, "center"); y += 7;
+            doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+            doc.text("Poblacion, Kabacan, Cotabato", centerX, y, null, null, "center"); y += 5;
+            doc.text("Tel: (123) 456-7890 | Email: treasury@osiashs.edu.ph", centerX, y, null, null, "center"); y += 15;
+            
+            doc.setLineWidth(1); doc.line(20, y, 190, y); y += 15;
+
+            doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+            doc.text("STATEMENT OF ACCOUNT", centerX, y, null, null, "center"); y += 15;
+
+            doc.setFontSize(10); doc.setFont("helvetica", "bold");
+            doc.text(`Student Name: ${gName}`, 20, y);
+            doc.text(`Generated: ${currentDateTime}`, 120, y); y += 6; 
+            doc.text(`Learner Ref No (LRN): ${gLRN}`, 20, y); 
+            doc.text(`School Year: 2024-2025`, 120, y); y += 15;
+
+            doc.setFillColor(240, 240, 240);
+            doc.rect(20, y, 170, 10, 'F');
+            doc.setFont("helvetica", "bold");
+            doc.text("DESCRIPTION", 25, y+6);
+            doc.text("STATUS", 100, y+6);
+            doc.text("BALANCE", 185, y+6, null, null, "right");
+            y += 12;
+
+            doc.setFont("helvetica", "normal");
+            
+            const d = gStudentData;
+            const fees = [
+                { name: "PTA Fee", val: d.pta_fee, stat: d.pta_stat || d.pta_status },
+                { name: "Miscellaneous Fee", val: d.misc_fee, stat: d.misc_stat || d.misc_status },
+                { name: "ID Lanyard", val: d.id_fee, stat: d.id_stat || d.id_status }
+            ];
+
+            let totalBalance = 0;
+
+            fees.forEach(fee => {
+                let amount = parseFloat(fee.val || 0);
+                let statText = fee.stat || "Pending";
+                if(statText.toLowerCase() === 'paid') amount = 0;
+                totalBalance += amount;
+
+                doc.text(fee.name, 25, y);
+                
+                if(statText.toLowerCase() === 'paid') doc.setTextColor(0, 128, 0); 
+                else doc.setTextColor(180, 0, 0); 
+                doc.text(statText.toUpperCase(), 100, y);
+                doc.setTextColor(0, 0, 0); 
+
+                doc.text("P " + amount.toFixed(2), 185, y, null, null, "right");
+                
+                doc.setDrawColor(200);
+                doc.line(20, y+2, 190, y+2); 
+                y += 10;
+            });
+
+            y += 5;
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL OUTSTANDING BALANCE:", 100, y);
+            doc.text("P " + totalBalance.toFixed(2), 185, y, null, null, "right");
+
+            y = 240; 
+            doc.setLineWidth(0.5);
+            
+            doc.line(30, y, 90, y);
+            doc.text("Cashier / Registrar", 60, y+5, null, null, "center");
+
+            doc.line(120, y, 180, y);
+            doc.text("Parent / Guardian", 150, y+5, null, null, "center");
+
+            y += 20;
+            doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(100);
+            doc.text("This is a system-generated document. Valid without seal if presented with official receipt.", centerX, y, null, null, "center");
+
+            doc.save(`SOA_${gLRN}.pdf`);
+        }
+    </script>
+</body>
+</html>
