@@ -8,201 +8,72 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    
-    <style>
-        :root {
-            --primary: #4e73df;
-            --secondary: #858796;
-            --success: #1cc88a;
-            --danger: #e74a3b;
-            --light: #f8f9fc;
-            --dark: #5a5c69;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <style>
+        /* CSS UNCHANGED */
+        :root { --primary: #4e73df; --secondary: #858796; --success: #1cc88a; --danger: #e74a3b; --light: #f8f9fc; --dark: #5a5c69; --shadow: 0 4px 6px rgba(0,0,0,0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: #f0f2f5; color: #333; height: 100vh; overflow: hidden; }
-
-        /* --- LOGIN SCREEN --- */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #4e73df, #224abe);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 2000;
-        }
-        .login-card {
-            background: white; padding: 40px; border-radius: 12px;
-            width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .login-form input {
-            width: 100%; padding: 12px; margin-bottom: 15px;
-            border: 1px solid #d1d3e2; border-radius: 6px; outline: none;
-        }
-        .login-btn {
-            width: 100%; padding: 12px; background: var(--primary);
-            color: white; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: 500; transition: 0.2s;
-        }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #4e73df, #224abe); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-form input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #d1d3e2; border-radius: 6px; outline: none; }
+        .login-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; }
         .login-btn:hover { background: #2e59d9; }
-
-        /* --- ANNOUNCEMENT MODAL (NEW) --- */
-        #announce-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); /* Dimmed background */
-            display: none; justify-content: center; align-items: center;
-            z-index: 2500; backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s;
-        }
-        .announce-card {
-            background: white; width: 90%; max-width: 500px;
-            border-radius: 15px; padding: 25px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-            display: flex; flex-direction: column;
-        }
-        .announce-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;
-        }
-        .live-clock-badge {
-            background: #e8f0fe; color: var(--primary);
-            padding: 5px 12px; border-radius: 20px;
-            font-size: 0.85rem; font-weight: 600;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .announce-textarea {
-            width: 100%; height: 120px; padding: 15px;
-            border: 2px solid #e3e6f0; border-radius: 10px;
-            resize: none; font-size: 1rem; outline: none; margin-bottom: 20px;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2500; backdrop-filter: blur(5px); animation: fadeIn 0.3s; }
+        .modal-card { background: white; width: 90%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .live-clock-badge { background: #e8f0fe; color: var(--primary); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .announce-textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid #e3e6f0; border-radius: 10px; resize: none; font-size: 1rem; outline: none; margin-bottom: 20px; }
         .announce-textarea:focus { border-color: var(--primary); }
-        .announce-actions { display: flex; justify-content: flex-end; gap: 10px; }
-
-        /* --- MAIN APP LAYOUT --- */
-        #app-container { display: none; height: 100vh; display: none; }
-        
-        /* Sidebar */
-        .sidebar {
-            width: 250px; background: #fff; padding: 20px;
-            display: flex; flex-direction: column; border-right: 1px solid #e3e6f0;
-        }
-        .menu-item {
-            padding: 12px 15px; margin-bottom: 5px; border-radius: 8px;
-            color: var(--secondary); cursor: pointer; display: flex;
-            align-items: center; gap: 10px; transition: 0.2s;
-        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        #app-container { display: none; height: 100vh; }
+        .sidebar { width: 250px; background: #fff; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #e3e6f0; }
+        .menu-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; color: var(--secondary); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
         .menu-item:hover { background-color: var(--light); color: var(--primary); }
         .menu-item.active { background-color: var(--primary); color: white; }
-
-        /* Content Area */
         .main-content { flex: 1; padding: 30px; overflow-y: auto; background: #f0f2f5; }
-
-        /* Sections (Views) */
         .section-view { display: none; animation: fadeIn 0.3s ease; }
         .section-view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* UI Components */
-        .search-card {
-            background: white; padding: 20px; border-radius: 12px;
-            box-shadow: var(--shadow); margin-bottom: 25px;
-            display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
-        }
-        .search-input {
-            width: 100%; padding: 12px; border: 1px solid #d1d3e2;
-            border-radius: 8px; outline: none; flex: 1;
-        }
-        .icon-btn {
-            background: none; border: none; cursor: pointer; color: var(--secondary);
-            font-size: 1.2rem; transition: 0.2s; padding: 5px;
-        }
-        .icon-btn:hover { color: var(--primary); }
-
-        /* Camera Container Styles */
-        #scanner-container {
-            width: 100%; display: none; margin-top: 15px;
-            background: #000; border-radius: 8px; overflow: hidden;
-            position: relative;
-        }
+        .search-card { background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 25px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+        .search-input { width: 100%; padding: 12px; border: 1px solid #d1d3e2; border-radius: 8px; outline: none; flex: 1; }
+        #scanner-container { width: 100%; display: none; margin-top: 15px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
         #reader { width: 100%; }
-        .close-cam-btn {
-            position: absolute; top: 10px; right: 10px; 
-            background: rgba(255,255,255,0.8); border: none; 
-            padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10;
-        }
-        
-        /* Dashboard Grid */
-        .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .fee-card {
-            background: white; padding: 20px; border-radius: 12px;
-            box-shadow: var(--shadow);
-        }
-        .status-select {
-            width: 100%; padding: 8px; border-radius: 20px;
-            border: 1px solid #e3e6f0; text-align: center; cursor: pointer;
-            margin-top: 5px; outline: none; font-weight: 500;
-        }
-        /* Status Colors */
+        .close-cam-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.8); border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .fee-card { background: white; padding: 20px; border-radius: 12px; box-shadow: var(--shadow); }
+        .status-select { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #e3e6f0; text-align: center; cursor: pointer; margin-top: 5px; outline: none; font-weight: 500; }
         .status-paid { background: #d1fae5; color: #065f46; border-color: #d1fae5; }
         .status-pending { background: #fef3c7; color: #92400e; border-color: #fef3c7; }
         .status-overdue { background: #fee2e2; color: #b91c1c; border-color: #fee2e2; }
-
-        /* Students Table */
-        .table-container {
-            background: white; border-radius: 12px;
-            box-shadow: var(--shadow); overflow: hidden;
-        }
+        .table-container { background: white; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
         .student-table { width: 100%; border-collapse: collapse; }
-        .student-table th {
-            background: #f8f9fc; color: var(--primary); font-weight: 600;
-            text-align: left; padding: 15px 25px;
-        }
-        .student-table td {
-            padding: 15px 25px; border-bottom: 1px solid #e3e6f0;
-            color: var(--dark);
-        }
+        .student-table th { background: #f8f9fc; color: var(--primary); font-weight: 600; text-align: left; padding: 15px 25px; }
+        .student-table td { padding: 15px 25px; border-bottom: 1px solid #e3e6f0; color: var(--dark); }
         .student-table tr:hover { background: #fafafa; }
-        .btn-sm {
-            padding: 6px 12px; font-size: 0.85rem; border-radius: 4px;
-            border: none; cursor: pointer; background: var(--primary);
-            color: white; transition: 0.2s;
-        }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; background: var(--primary); color: white; transition: 0.2s; }
         .btn-sm:hover { background: #2e59d9; }
-
-        /* Loader & Notification */
         .hidden { display: none; }
-        #loader {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.8);
-            display: none; justify-content: center; align-items: center; z-index: 3000;
-        }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary); border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .notification {
-            position: fixed; top: 20px; right: 20px; padding: 15px 25px;
-            border-radius: 8px; color: white; transform: translateX(150%);
-            transition: 0.3s; z-index: 4000; font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; transform: translateX(150%); transition: 0.3s; z-index: 4000; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .notification.show { transform: translateX(0); }
+        .report-summary-box { background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .chart-container { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; }
+        .fee-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .fee-list-item:last-child { border-bottom: none; }
+        .delete-icon { color: var(--danger); cursor: pointer; padding: 5px; }
+        .delete-icon:hover { background: #fee2e2; border-radius: 5px; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-card">
-            <h2 style="color: var(--primary); margin-bottom: 5px;">
-                <i class="fas fa-university"></i> Registrar Portal
-            </h2>
+            <h2 style="color: var(--primary); margin-bottom: 5px;"><i class="fas fa-university"></i> Registrar Portal</h2>
             <p style="color: var(--secondary); margin-bottom: 25px; font-size: 0.9rem;">Osias High School</p>
-            
             <div class="login-form">
                 <input type="text" id="username" placeholder="Username" onkeypress="handleLoginEnter(event)">
                 <input type="password" id="password" placeholder="Password" onkeypress="handleLoginEnter(event)">
@@ -212,50 +83,50 @@
         </div>
     </div>
 
-    <div id="announce-overlay">
-        <div class="announce-card">
-            <div class="announce-header">
+    <div id="announce-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
                 <h3 style="color: var(--dark);"><i class="fas fa-bullhorn" style="color: var(--danger);"></i> New Announcement</h3>
-                <div class="live-clock-badge">
-                    <i class="far fa-clock"></i> <span id="modalClock">Loading...</span>
-                </div>
+                <div class="live-clock-badge"><i class="far fa-clock"></i> <span id="modalClock">Loading...</span></div>
             </div>
-            
-            <p style="color: var(--secondary); margin-bottom: 10px; font-size: 0.9rem;">
-                This message will appear on the Student Portal immediately.
-            </p>
-            
+            <p style="color: var(--secondary); margin-bottom: 10px; font-size: 0.9rem;">This message will appear on the Student Portal immediately.</p>
             <textarea id="announce-msg" class="announce-textarea" placeholder="Type your announcement here..."></textarea>
-            
-            <div class="announce-actions">
+            <div class="modal-actions">
                 <button class="login-btn" onclick="closeAnnounceModal()" style="background: var(--secondary); width: auto; padding: 10px 25px;">Cancel</button>
                 <button class="login-btn" onclick="submitAnnouncement()" style="background: var(--danger); width: auto; padding: 10px 25px;">Post Now</button>
             </div>
         </div>
     </div>
 
-    <div id="app-container" style="display: none;"> <div id="loader"><div class="spinner"></div></div>
+    <div id="modal-history" class="modal-overlay">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 style="color: var(--dark);">Collection History</h3>
+                <button onclick="closeModal('modal-history')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="student-table">
+                    <thead><tr><th>Date</th><th style="text-align:right;">Total Collected</th></tr></thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" style="display: none;"> 
+        <div id="loader"><div class="spinner"></div></div>
         <div id="notification" class="notification"></div>
 
         <div class="sidebar">
             <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 30px; padding-left: 10px;">
                 <i class="fas fa-university"></i> OHS Admin
             </div>
-            
-            <div class="menu-item active" id="nav-fees" onclick="switchTab('fees')">
-                <i class="fas fa-money-check-alt"></i> Fee Management
-            </div>
-            <div class="menu-item" id="nav-students" onclick="switchTab('students')">
-                <i class="fas fa-users"></i> Students
-            </div>
-            <div class="menu-item" onclick="showNotif('Settings unavailable', 'red')">
-                <i class="fas fa-cog"></i> Settings
-            </div>
-            
+            <div class="menu-item active" id="nav-fees" onclick="switchTab('fees')"><i class="fas fa-money-check-alt"></i> Fee Management</div>
+            <div class="menu-item" id="nav-reports" onclick="switchTab('reports')"><i class="fas fa-chart-line"></i> View Collection Report</div>
+            <div class="menu-item" id="nav-students" onclick="switchTab('students')"><i class="fas fa-users"></i> Students</div>
+            <div class="menu-item" id="nav-settings" onclick="switchTab('settings')"><i class="fas fa-cogs"></i> Fee Manager</div>
             <div style="margin-top: auto;">
-                <div class="menu-item" onclick="location.reload()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </div>
+                <div class="menu-item" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> Logout</div>
             </div>
         </div>
 
@@ -270,96 +141,110 @@
                 <div class="search-card">
                     <i class="fas fa-search" style="color: var(--secondary); margin-left: 10px;"></i>
                     <input type="text" id="lrnInput" class="search-input" placeholder="Enter Student LRN..." style="border: none;" onkeypress="if(event.key==='Enter') runSearch()">
-                    
-                    <button class="login-btn" onclick="openAnnounceModal()" style="width: auto; padding: 10px 15px; background: #e63946; margin-right: 10px; margin-left:10px;" title="Post Announcement">
-                        <i class="fas fa-bullhorn"></i> Post Announce
-                    </button>
-
-                    <button class="login-btn" onclick="toggleCamera()" style="width: auto; padding: 10px 20px; background: var(--dark); margin-right: 10px;">
-                        <i class="fas fa-camera"></i> Scan QR
-                    </button>
-                    
+                    <button class="login-btn" onclick="openAnnounceModal()" style="width: auto; padding: 10px 15px; background: #e63946; margin-right: 10px; margin-left:10px;" title="Post Announcement"><i class="fas fa-bullhorn"></i> Announce</button>
+                    <button class="login-btn" onclick="toggleCamera()" style="width: auto; padding: 10px 20px; background: var(--dark); margin-right: 10px;"><i class="fas fa-camera"></i> Scan</button>
                     <button onclick="runSearch()" class="login-btn" style="width: auto; padding: 10px 30px;">Search</button>
-
-                    <div id="scanner-container">
-                        <button class="close-cam-btn" onclick="stopCamera()">Close Camera</button>
-                        <div id="reader"></div>
-                    </div>
+                    <div id="scanner-container"><button class="close-cam-btn" onclick="stopCamera()">Close Camera</button><div id="reader"></div></div>
                 </div>
 
                 <div id="editSection" class="hidden">
                     <input type="hidden" id="rowIndex">
-                    
-                    <div class="dashboard-grid">
-                        <div class="fee-card" style="grid-column: 1 / -1; border-left: 5px solid var(--primary);">
-                            <h3 style="color: var(--secondary); font-size: 0.85rem; letter-spacing: 1px;">STUDENT DETAILS</h3>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-top: 5px;" id="nameDisplay"></div>
-                            <div style="color: var(--secondary);">LRN: <span id="lrnDisplay" style="font-weight: 600;"></span></div>
-                        </div>
-
-                        <div class="fee-card">
-                            <h4 style="margin-bottom: 10px;">PTA Fee</h4>
-                            <input type="number" id="ptaFee" class="search-input" style="margin-bottom: 10px;" oninput="checkAutoPaid('ptaFee', 'ptaStat')">
-                            <select id="ptaStat" class="status-select" onchange="updateColor(this)">
-                                <option value="Paid">Paid</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Overdue">Overdue</option>
-                            </select>
-                        </div>
-
-                        <div class="fee-card">
-                            <h4 style="margin-bottom: 10px;">Misc Fee</h4>
-                            <input type="number" id="miscFee" class="search-input" style="margin-bottom: 10px;" oninput="checkAutoPaid('miscFee', 'miscStat')">
-                            <select id="miscStat" class="status-select" onchange="updateColor(this)">
-                                <option value="Paid">Paid</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Overdue">Overdue</option>
-                            </select>
-                        </div>
-
-                        <div class="fee-card">
-                            <h4 style="margin-bottom: 10px;">ID Fee</h4>
-                            <input type="number" id="idFee" class="search-input" style="margin-bottom: 10px;" oninput="checkAutoPaid('idFee', 'idStat')">
-                            <select id="idStat" class="status-select" onchange="updateColor(this)">
-                                <option value="Paid">Paid</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Overdue">Overdue</option>
-                            </select>
-                        </div>
+                    <div class="fee-card" style="border-left: 5px solid var(--primary); margin-bottom: 20px;">
+                        <h3 style="color: var(--secondary); font-size: 0.85rem; letter-spacing: 1px;">STUDENT DETAILS</h3>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-top: 5px;" id="nameDisplay"></div>
+                        <div style="color: var(--secondary);">LRN: <span id="lrnDisplay" style="font-weight: 600;"></span></div>
                     </div>
-
+                    <div id="dynamicFeeContainer" class="dashboard-grid"></div>
                     <div style="display: flex; justify-content: flex-end; margin-top: 25px;">
-                        <button onclick="saveChanges()" class="login-btn" style="background: var(--success); width: auto; padding: 12px 40px;">
-                            <i class="fas fa-save"></i> Save Updates
-                        </button>
+                        <button onclick="saveChanges()" class="login-btn" style="background: var(--success); width: auto; padding: 12px 40px;"><i class="fas fa-save"></i> Save Updates</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-reports" class="section-view">
+                <div style="margin-bottom: 20px;">
+                    <h2 style="color: var(--dark);">Daily Collection Report</h2>
+                    <p style="color: var(--secondary); font-size: 0.9rem;">View today's financial summary.</p>
+                </div>
+                <div class="report-summary-box">
+                    <p style="opacity: 0.8; margin-bottom: 5px;">TOTAL COLLECTED TODAY (<span id="todayDate"></span>)</p>
+                    <h1 style="font-size: 2.5rem; font-weight: 700;">₱ <span id="dailyTotal">0.00</span></h1>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="fee-card">
+                        <h4 style="margin-bottom: 20px; text-align: center;">Fee Status Diagram</h4>
+                        <div class="chart-container"><canvas id="statusChart"></canvas></div>
+                    </div>
+                    <div class="fee-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                        <i class="fas fa-history" style="font-size: 3rem; color: var(--secondary); margin-bottom: 15px;"></i>
+                        <h3 style="margin-bottom: 10px;">Historical Data</h3>
+                        <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">View collection totals from previous dates.</p>
+                        <button onclick="loadHistory()" class="login-btn" style="width: auto; padding: 10px 25px;">View Collection History</button>
                     </div>
                 </div>
             </div>
 
             <div id="view-students" class="section-view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <h2 style="color: var(--dark);">Registered Students</h2>
-                        <p style="color: var(--secondary); font-size: 0.9rem;">View all students from the database.</p>
-                    </div>
-                    <button onclick="loadStudents()" class="login-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem; background: var(--secondary);">
-                        <i class="fas fa-sync-alt"></i> Refresh List
-                    </button>
+                    <div><h2 style="color: var(--dark);">Registered Students</h2><p style="color: var(--secondary); font-size: 0.9rem;">View all students.</p></div>
+                    <button onclick="loadStudents()" class="login-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem; background: var(--secondary);"><i class="fas fa-sync-alt"></i> Refresh List</button>
                 </div>
-
                 <div class="table-container">
                     <table class="student-table">
-                        <thead>
-                            <tr>
-                                <th>LRN</th>
-                                <th>Name</th>
-                                <th style="text-align: right;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentsTableBody">
-                            <tr><td colspan="3" style="text-align: center; color: var(--secondary);">Click 'Refresh List' to load data.</td></tr>
-                        </tbody>
+                        <thead><tr><th>LRN</th><th>Name</th><th style="text-align: right;">Action</th></tr></thead>
+                        <tbody id="studentsTableBody"><tr><td colspan="3" style="text-align: center; color: var(--secondary);">Click 'Refresh List' to load data.</td></tr></tbody>
                     </table>
+                </div>
+            </div>
+
+            <div id="view-settings" class="section-view">
+                <div style="margin-bottom: 20px;">
+                    <h2 style="color: var(--dark);">Fee Manager</h2>
+                    <p style="color: var(--secondary); font-size: 0.9rem;">Add, remove, or bulk update fees.</p>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="fee-card">
+                        <h4 style="margin-bottom: 15px;">Add New Fee</h4>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="newFeeName" class="search-input" placeholder="e.g. Graduation Fee">
+                            <button onclick="addNewFee()" class="login-btn" style="width:auto; background:var(--success);">Add</button>
+                        </div>
+                    </div>
+                    
+                    <div class="fee-card">
+                        <h4 style="margin-bottom: 15px; color:var(--primary);">Bulk Update Tools</h4>
+                        <p style="font-size:0.8rem; color:gray; margin-bottom:10px;">Select a fee to update for ALL students.</p>
+                        
+                        <label style="font-size:0.8rem; font-weight:600;">Select Fee:</label>
+                        <select id="bulkFeeSelect" class="status-select" style="margin-bottom:15px; text-align:left;"></select>
+                        
+                        <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                            <label style="font-size:0.8rem;">Set Amount (₱):</label>
+                            <div style="display:flex; gap:10px; margin-top:5px;">
+                                <input type="number" id="bulkAmountInput" class="search-input" placeholder="0.00">
+                                <button onclick="applyBulkAmount()" class="login-btn" style="width:auto; padding:5px 15px; font-size:0.8rem;">Update</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size:0.8rem;">Set Status:</label>
+                            <div style="display:flex; gap:10px; margin-top:5px;">
+                                <select id="bulkStatusSelect" class="status-select">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                                <button onclick="applyBulkStatus()" class="login-btn" style="width:auto; padding:5px 15px; font-size:0.8rem;">Update</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fee-card">
+                        <h4 style="margin-bottom: 15px;">Active Fees</h4>
+                        <div id="feeListContainer" style="max-height: 300px; overflow-y:auto;">
+                            <div style="text-align:center; padding:20px; color:#ccc;">Loading...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -372,17 +257,14 @@
     // ------------------------------------------------------------------
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlFOu-d4cvNfMB4j6kIIv0dgEXvczDcSiU7--6Gemdtu4ctxxD2nK4ML-KiegTr1fp/exec"; 
     
-    // Global Scanner Variable
     let html5QrcodeScanner = null;
-    let clockInterval = null; // Variable for the live clock
+    let clockInterval = null; 
+    let myChart = null; 
 
-    // --- LOGIN LOGIC ---
     function handleLoginEnter(e) { if(e.key === 'Enter') checkLogin(); }
-
     function checkLogin() {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
-        
         if (u === "OsiasRegistrar" && p === "OHS2005") {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('app-container').style.display = 'flex';
@@ -396,82 +278,9 @@
         }
     }
 
-    // --- NEW: ANNOUNCEMENT MODAL FUNCTIONS ---
-    
-    // 1. Open the Modal & Start Clock
-    function openAnnounceModal() {
-        const modal = document.getElementById('announce-overlay');
-        modal.style.display = 'flex';
-        document.getElementById('announce-msg').value = ""; // Clear previous text
-        document.getElementById('announce-msg').focus();
-
-        // Start Live Clock
-        updateModalClock(); // Run once immediately
-        clockInterval = setInterval(updateModalClock, 1000); // Update every second
-    }
-
-    // 2. Close the Modal & Stop Clock
-    function closeAnnounceModal() {
-        document.getElementById('announce-overlay').style.display = 'none';
-        if (clockInterval) clearInterval(clockInterval); // Stop timer to save resources
-    }
-
-    // 3. Logic to update the time text
-    function updateModalClock() {
-        const now = new Date();
-        const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        document.getElementById('modalClock').innerText = now.toLocaleString('en-US', options);
-    }
-
-    // 4. Submit logic (Replaces the old Prompt logic)
-    function submitAnnouncement() {
-        const msg = document.getElementById('announce-msg').value.trim();
-        
-        if(!msg) {
-            alert("Please type a message first.");
-            return;
-        }
-
-        toggleLoader(true);
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "setAnnouncement", message: msg })
-        })
-        .then(r => r.json())
-        .then(d => {
-            toggleLoader(false);
-            if(d.success) {
-                showNotif("Announcement Posted Successfully!", "success");
-                closeAnnounceModal(); // Close window on success
-            } else {
-                showNotif("Error posting announcement.", "red");
-            }
-        })
-        .catch(e => {
-            toggleLoader(false);
-            showNotif("Connection Error", "red");
-        });
-    }
-
-    // --- NAVIGATION LOGIC ---
-    function switchTab(tabName) {
-        document.querySelectorAll('.section-view').forEach(d => d.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        if (tabName === 'fees') {
-            document.getElementById('view-fees').classList.add('active');
-            document.getElementById('nav-fees').classList.add('active');
-        } else if (tabName === 'students') {
-            document.getElementById('view-students').classList.add('active');
-            document.getElementById('nav-students').classList.add('active');
-            loadStudents(); 
-        }
-    }
-
-    // --- UI UTILITIES ---
-    function toggleLoader(show) { 
-        document.getElementById('loader').style.display = show ? 'flex' : 'none'; 
-    }
-
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function toggleLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
     function showNotif(msg, type) {
         const el = document.getElementById("notification");
         el.innerText = msg;
@@ -480,178 +289,186 @@
         setTimeout(() => el.classList.remove('show'), 3000);
     }
 
-    function updateColor(el) {
-        el.classList.remove('status-paid', 'status-pending', 'status-overdue');
-        el.classList.add('status-' + el.value.toLowerCase());
-    }
+    function openAnnounceModal() { openModal('announce-overlay'); document.getElementById('announce-msg').value = ""; document.getElementById('announce-msg').focus(); updateModalClock(); clockInterval = setInterval(updateModalClock, 1000); }
+    function closeAnnounceModal() { closeModal('announce-overlay'); if (clockInterval) clearInterval(clockInterval); }
+    function updateModalClock() { const now = new Date(); document.getElementById('modalClock').innerText = now.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+    function submitAnnouncement() { const msg = document.getElementById('announce-msg').value.trim(); if(!msg) return alert("Please type a message first."); toggleLoader(true); fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "setAnnouncement", message: msg }) }).then(r => r.json()).then(d => { toggleLoader(false); if(d.success) { showNotif("Announcement Posted Successfully!", "success"); closeAnnounceModal(); } else { showNotif("Error posting announcement.", "red"); } }).catch(e => { toggleLoader(false); showNotif("Connection Error", "red"); }); }
 
-    function checkAutoPaid(inputId, selectId) {
-        const val = document.getElementById(inputId).value;
-        const select = document.getElementById(selectId);
-        if (val !== '' && parseFloat(val) === 0) {
-            select.value = "Paid";
-            updateColor(select);
+    function switchTab(tabName) {
+        document.querySelectorAll('.section-view').forEach(d => d.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById('editSection').classList.add('hidden');
+
+        if (tabName === 'fees') {
+            document.getElementById('view-fees').classList.add('active');
+            document.getElementById('nav-fees').classList.add('active');
+        } else if (tabName === 'students') {
+            document.getElementById('view-students').classList.add('active');
+            document.getElementById('nav-students').classList.add('active');
+            loadStudents(); 
+        } else if (tabName === 'reports') {
+            document.getElementById('view-reports').classList.add('active');
+            document.getElementById('nav-reports').classList.add('active');
+            loadDailyReport();
+        } else if (tabName === 'settings') {
+            document.getElementById('view-settings').classList.add('active');
+            document.getElementById('nav-settings').classList.add('active');
+            loadFeeList();
         }
     }
 
-    // --- LIVE QR SCANNER LOGIC ---
-    function toggleCamera() {
-        const container = document.getElementById('scanner-container');
-        if (container.style.display === "block") return;
-
-        container.style.display = "block";
-        
-        if (!html5QrcodeScanner) {
-            html5QrcodeScanner = new Html5Qrcode("reader");
-        }
-
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
-        .catch(err => {
-            container.style.display = "none";
-            showNotif("Camera Error: " + err, "red");
-        });
-    }
-
-    function stopCamera() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(() => {
-                document.getElementById('scanner-container').style.display = "none";
-            }).catch(err => console.log("Stop failed", err));
-        } else {
-            document.getElementById('scanner-container').style.display = "none";
-        }
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-        stopCamera();
-        document.getElementById('lrnInput').value = decodedText;
-        showNotif("QR Detected! Searching...", "success");
-        runSearch();
-    }
-
-    // --- STUDENT LIST (GET) ---
-    function loadStudents() {
+    // --- FEE MANAGER & BULK TOOLS ---
+    function loadFeeList() {
         toggleLoader(true);
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "getStudents" })
-        })
-        .then(response => response.json())
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getFeeList" }) })
+        .then(r => r.json())
         .then(data => {
             toggleLoader(false);
-            const tbody = document.getElementById('studentsTableBody');
-            tbody.innerHTML = ""; 
+            const container = document.getElementById('feeListContainer');
+            const bulkSelect = document.getElementById('bulkFeeSelect');
+            container.innerHTML = "";
+            bulkSelect.innerHTML = ""; // Clear dropdown
             
-            if (data.students && data.students.length > 0) {
-                data.students.forEach(s => {
-                    const row = `
-                        <tr>
-                            <td>${s.lrn}</td>
-                            <td>${s.name}</td>
-                            <td style="text-align: right;">
-                                <button class="btn-sm" onclick="manageStudent('${s.lrn}')">
-                                    <i class="fas fa-edit"></i> Manage Fees
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
+            if(data.fees && data.fees.length > 0) {
+                data.fees.forEach(f => {
+                    // Add to list
+                    container.innerHTML += `<div class="fee-list-item"><span style="font-weight:600;">${f} Fee</span><i class="fas fa-trash-alt delete-icon" onclick="removeFee('${f}')" title="Remove Fee"></i></div>`;
+                    // Add to bulk dropdown
+                    let option = document.createElement("option");
+                    option.value = f;
+                    option.text = f;
+                    bulkSelect.appendChild(option);
                 });
-            } else {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">No students found in database.</td></tr>`;
-            }
-        })
-        .catch(err => {
-            toggleLoader(false);
-            showNotif("Failed to load students.", "red");
+            } else { container.innerHTML = "<p style='padding:15px; text-align:center;'>No fees found.</p>"; }
         });
     }
 
-    function manageStudent(lrn) {
-        switchTab('fees');
-        document.getElementById('lrnInput').value = lrn;
-        runSearch();
+    function addNewFee() {
+        const name = document.getElementById('newFeeName').value.trim();
+        if(!name) return showNotif("Enter a fee name", "red");
+        toggleLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "addNewFee", feeName: name }) }).then(r => r.json()).then(res => { toggleLoader(false); showNotif(res.message, "success"); document.getElementById('newFeeName').value = ""; loadFeeList(); });
     }
 
-    // --- FEE MANAGEMENT (SEARCH & UPDATE) ---
+    function removeFee(name) {
+        if(!confirm(`Delete "${name}"? This removes the column and ALL student payment data for this fee.`)) return;
+        toggleLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "removeFee", feeName: name }) }).then(r => r.json()).then(res => { toggleLoader(false); showNotif(res.message, "success"); loadFeeList(); });
+    }
+
+    // --- NEW BULK UPDATE JS ---
+    function applyBulkAmount() {
+        const fee = document.getElementById('bulkFeeSelect').value;
+        const amt = document.getElementById('bulkAmountInput').value;
+        if(!fee || !amt) return showNotif("Select fee and enter amount", "red");
+        
+        if(!confirm(`Set ${fee} amount to ₱${amt} for ALL students?`)) return;
+        
+        toggleLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "bulkUpdateAmount", feeName: fee, amount: amt }) })
+        .then(r => r.json()).then(res => {
+            toggleLoader(false);
+            if(res.success) { showNotif(res.message, "success"); document.getElementById('bulkAmountInput').value = ""; }
+            else { showNotif(res.error, "red"); }
+        });
+    }
+
+    function applyBulkStatus() {
+        const fee = document.getElementById('bulkFeeSelect').value;
+        const stat = document.getElementById('bulkStatusSelect').value;
+        if(!fee) return showNotif("Select fee", "red");
+
+        if(!confirm(`Set ${fee} status to '${stat}' for ALL students?`)) return;
+
+        toggleLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "bulkUpdateStatus", feeName: fee, status: stat }) })
+        .then(r => r.json()).then(res => {
+            toggleLoader(false);
+            if(res.success) showNotif(res.message, "success");
+            else showNotif(res.error, "red");
+        });
+    }
+
+    // --- CORE SEARCH & UPDATE ---
     function runSearch() {
         const lrn = document.getElementById("lrnInput").value;
         if (!lrn) return showNotif("Please enter an LRN", "red");
-
         toggleLoader(true);
         document.getElementById("editSection").classList.add("hidden"); 
-
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "search", lrn: lrn })
-        })
+        
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "search", lrn: lrn }) })
         .then(response => response.json())
-        .then(data => {
-            toggleLoader(false);
-            if (data.found) {
-                document.getElementById("editSection").classList.remove("hidden");
+        .then(data => { 
+            toggleLoader(false); 
+            if (data.found) { 
+                document.getElementById("editSection").classList.remove("hidden"); 
+                document.getElementById("rowIndex").value = data.rowIndex; 
+                document.getElementById("nameDisplay").innerText = data.name; 
+                document.getElementById("lrnDisplay").innerText = lrn; 
                 
-                document.getElementById("rowIndex").value = data.rowIndex;
-                document.getElementById("nameDisplay").innerText = data.name;
-                document.getElementById("lrnDisplay").innerText = lrn;
-
-                const setVal = (id, val) => {
-                    const el = document.getElementById(id);
-                    el.value = val;
-                    if(el.tagName === 'SELECT') updateColor(el);
-                };
-
-                setVal("ptaFee", data.pta_fee);
-                setVal("ptaStat", data.pta_stat);
-                setVal("miscFee", data.misc_fee);
-                setVal("miscStat", data.misc_stat);
-                setVal("idFee", data.id_fee);
-                setVal("idStat", data.id_stat);
-            } else {
-                showNotif("Student LRN not found.", "red");
-            }
-        })
-        .catch(err => {
-            toggleLoader(false);
-            showNotif("Connection Error.", "red");
-        });
+                const container = document.getElementById("dynamicFeeContainer");
+                container.innerHTML = ""; 
+                if(data.fees && data.fees.length > 0) {
+                    data.fees.forEach(fee => {
+                        const feeHtml = `<div class="fee-card"><h4 style="margin-bottom: 10px;">${fee.name} Fee</h4><input type="number" class="search-input fee-amount-input" data-key="${fee.keyFee}" data-stat-key="${fee.keyStat}" value="${fee.amount}" style="margin-bottom: 10px;"><select class="status-select fee-status-select" onchange="updateColor(this)"><option value="Paid" ${fee.status === 'Paid' ? 'selected' : ''}>Paid</option><option value="Pending" ${fee.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Overdue" ${fee.status === 'Overdue' ? 'selected' : ''}>Overdue</option></select></div>`;
+                        container.innerHTML += feeHtml;
+                    });
+                    document.querySelectorAll('.fee-status-select').forEach(el => updateColor(el));
+                } else { container.innerHTML = "<p>No fee columns found.</p>"; }
+            } else { showNotif("Student LRN not found.", "red"); } 
+        }).catch(err => { toggleLoader(false); showNotif("Connection Error.", "red"); });
     }
 
     function saveChanges() {
         toggleLoader(true);
-        const payload = {
-            action: "update",
-            row: document.getElementById("rowIndex").value,
-            ptaFee: document.getElementById("ptaFee").value,
-            ptaStat: document.getElementById("ptaStat").value,
-            miscFee: document.getElementById("miscFee").value,
-            miscStat: document.getElementById("miscStat").value,
-            idFee: document.getElementById("idFee").value,
-            idStat: document.getElementById("idStat").value
-        };
-
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            toggleLoader(false);
-            if (data.success) {
-                showNotif("Fees updated successfully!", "success");
-                document.getElementById("editSection").classList.add("hidden");
-                document.getElementById("lrnInput").value = ""; 
-            } else {
-                showNotif("Error: " + data.error, "red");
-            }
-        })
-        .catch(err => {
-            toggleLoader(false);
-            showNotif("Save failed.", "red");
+        const inputs = document.querySelectorAll('.fee-amount-input');
+        const selects = document.querySelectorAll('.fee-status-select');
+        const feesToUpdate = [];
+        inputs.forEach((inp, idx) => {
+            feesToUpdate.push({ keyFee: inp.getAttribute('data-key'), keyStat: inp.getAttribute('data-stat-key'), amount: inp.value, status: selects[idx].value });
         });
+        const payload = { action: "update", row: document.getElementById("rowIndex").value, fees: feesToUpdate };
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) }).then(response => response.json()).then(data => { toggleLoader(false); if (data.success) { showNotif("Fees updated successfully!", "success"); document.getElementById("editSection").classList.add("hidden"); document.getElementById("lrnInput").value = ""; } else { showNotif("Error: " + data.error, "red"); } }).catch(err => { toggleLoader(false); showNotif("Save failed.", "red"); });
     }
-</script>
 
+    function updateColor(el) { el.classList.remove('status-paid', 'status-pending', 'status-overdue'); el.classList.add('status-' + el.value.toLowerCase()); }
+
+    function loadDailyReport() {
+        toggleLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getDailyReport" }) }).then(r => r.json()).then(data => {
+            toggleLoader(false);
+            document.getElementById('todayDate').innerText = data.date;
+            document.getElementById('dailyTotal').innerText = data.total.toLocaleString(undefined, {minimumFractionDigits: 2});
+            renderChart(data.stats);
+        }).catch(e => { toggleLoader(false); showNotif("Failed to load report", "red"); });
+    }
+
+    function renderChart(stats) {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, { type: 'pie', data: { labels: ['Paid', 'Pending', 'Overdue'], datasets: [{ data: [stats.paid, stats.pending, stats.overdue], backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+    }
+
+    function loadHistory() {
+        openModal('modal-history');
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Loading...</td></tr>';
+        fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getCollectionHistory" }) }).then(r => r.json()).then(data => {
+            tbody.innerHTML = "";
+            if(data.history && data.history.length > 0) {
+                data.history.sort((a,b) => new Date(b.date) - new Date(a.date));
+                data.history.forEach(h => { tbody.innerHTML += `<tr><td>${h.date}</td><td style="text-align: right; font-weight:bold; color:var(--success);">₱ ${h.amount.toLocaleString()}</td></tr>`; });
+            } else { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">No history found.</td></tr>'; }
+        }).catch(e => { tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:red;">Error loading history.</td></tr>'; });
+    }
+
+    function loadStudents() { toggleLoader(true); fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getStudents" }) }).then(response => response.json()).then(data => { toggleLoader(false); const tbody = document.getElementById('studentsTableBody'); tbody.innerHTML = ""; if (data.students && data.students.length > 0) { data.students.forEach(s => { const row = `<tr><td>${s.lrn}</td><td>${s.name}</td><td style="text-align: right;"><button class="btn-sm" onclick="manageStudent('${s.lrn}')"><i class="fas fa-edit"></i> Manage Fees</button></td></tr>`; tbody.innerHTML += row; }); } else { tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">No students found in database.</td></tr>`; } }).catch(err => { toggleLoader(false); showNotif("Failed to load students.", "red"); }); }
+    function manageStudent(lrn) { switchTab('fees'); document.getElementById('lrnInput').value = lrn; runSearch(); }
+
+    function toggleCamera() { const container = document.getElementById('scanner-container'); if (container.style.display === "block") return; container.style.display = "block"; if (!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("reader"); } const config = { fps: 10, qrbox: { width: 250, height: 250 } }; html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => { container.style.display = "none"; showNotif("Camera Error: " + err, "red"); }); }
+    function stopCamera() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { document.getElementById('scanner-container').style.display = "none"; }).catch(err => console.log("Stop failed", err)); } else { document.getElementById('scanner-container').style.display = "none"; } }
+    function onScanSuccess(decodedText, decodedResult) { stopCamera(); document.getElementById('lrnInput').value = decodedText; showNotif("QR Detected! Searching...", "success"); runSearch(); }
+
+</script>
 </body>
 </html>
