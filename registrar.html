@@ -113,6 +113,50 @@
         .history-table th { text-align: left; padding: 10px; border-bottom: 2px solid #eee; color: var(--secondary); font-weight: 500; }
         .history-table td { padding: 10px; border-bottom: 1px solid #f8f9fc; }
         .history-amount { text-align: right; font-weight: 600; color: var(--success); }
+
+        /* === STATUS TOGGLE CSS === */
+        .status-toggle-container {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            background: #f8f9fc;
+            padding: 10px 15px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        input[type="checkbox"]:checked + .toggle-label .toggle-switch {
+            background-color: var(--success);
+        }
+        input[type="checkbox"]:checked + .toggle-label .toggle-switch::after {
+            transform: translateX(20px);
+        }
+        .status-text { font-size: 0.9rem; font-weight: 600; color: var(--secondary); }
+        input[type="checkbox"]:checked + .toggle-label .status-text { color: var(--success); }
     </style>
 </head>
 <body>
@@ -145,6 +189,19 @@
                 <div class="nav-item" onclick="switchTab('fees')"><i class="fas fa-search"></i> Manage Fees</div>
                 <div class="nav-item" onclick="switchTab('students')"><i class="fas fa-users"></i> Students</div>
                 <div class="nav-item" onclick="switchTab('settings')"><i class="fas fa-cog"></i> Settings</div>
+            </div>
+
+            <div class="nav-item" onclick="logout()" style="color: var(--danger); cursor: pointer; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </div>
+
+            <div class="status-toggle-container">
+                <input type="checkbox" id="status-checkbox" style="display:none;" onchange="toggleRegistrarStatus()">
+                <label for="status-checkbox" class="toggle-label">
+                    <span class="status-text" id="status-text-label">Offline</span>
+                    <div class="toggle-switch"></div>
+                </label>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Auto-Offline 5PM-6AM</div>
             </div>
         </div>
 
@@ -344,17 +401,37 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlFOu-d4cvNfMB4j6kIIv0dgEXvczDcSiU7--6Gemdtu4ctxxD2nK4ML-KiegTr1fp/exec"; 
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION (SECURED) ---
         function handleLoginEnter(e) { if(e.key === 'Enter') checkLogin(); }
         
-        function checkLogin() {
+        async function checkLogin() {
             const user = document.getElementById('access-user').value;
             const pass = document.getElementById('access-pass').value;
-            if(user === 'OsiasRegistrar' && pass === 'OHS2005') { 
+            
+            toggleLoader(true);
+            document.getElementById('login-error').style.display = 'none';
+
+            // SECURE: Send to backend for verification
+            const response = await callApi({ action: 'login', user: user, pass: pass });
+            
+            toggleLoader(false);
+
+            if(response.success) {
+                // Success: Set session and load
+                sessionStorage.setItem("isLoggedIn", "true");
                 document.getElementById('login-overlay').style.display = 'none';
                 loadDashboard();
             } else {
+                // Fail
                 document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        // --- NEW LOGOUT FUNCTION ---
+        function logout() {
+            if(confirm("Are you sure you want to logout?")) {
+                sessionStorage.removeItem("isLoggedIn");
+                location.reload(); // Reloads page to show login screen again
             }
         }
 
@@ -374,17 +451,15 @@
 
         // --- API HANDLER ---
         async function callApi(payload) {
-            toggleLoader(true);
+            // NOTE: Loader toggle is handled by caller functions for better UX control
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-                toggleLoader(false);
                 return data;
             } catch (error) {
-                toggleLoader(false);
                 showNotif("Network Error: " + error, "red");
                 return { error: error };
             }
@@ -404,7 +479,9 @@
 
         // --- DASHBOARD ---
         function loadDashboard() {
+            toggleLoader(true);
             callApi({ action: 'getDailyReport' }).then(data => {
+                toggleLoader(false);
                 const paidCount = data.stats.paid;
                 const pendingCount = (data.stats.pending + data.stats.overdue);
 
@@ -414,6 +491,31 @@
 
                 // Pass the actual counts to the chart
                 renderChart(paidCount, pendingCount);
+            });
+            // NEW: FETCH STATUS
+            fetchRegistrarStatus();
+        }
+
+        // --- NEW: REGISTRAR STATUS HANDLERS ---
+        function fetchRegistrarStatus() {
+            callApi({ action: 'getRegistrarStatus' }).then(res => {
+                const isOnline = res.status === 'Online';
+                const checkbox = document.getElementById('status-checkbox');
+                const label = document.getElementById('status-text-label');
+                
+                checkbox.checked = isOnline;
+                label.innerText = isOnline ? "Online" : "Offline";
+            });
+        }
+
+        function toggleRegistrarStatus() {
+            const checkbox = document.getElementById('status-checkbox');
+            const isOnline = checkbox.checked;
+            const newStatus = isOnline ? 'Online' : 'Offline';
+            document.getElementById('status-text-label').innerText = newStatus;
+
+            callApi({ action: 'setRegistrarStatus', status: newStatus }).then(res => {
+                showNotif("Status Updated: " + newStatus);
             });
         }
 
@@ -471,7 +573,9 @@
             const lrn = document.getElementById('lrnInput').value;
             if(!lrn) return showNotif("Please enter LRN", "red");
             
+            toggleLoader(true);
             callApi({ action: 'search', lrn: lrn }).then(res => {
+                toggleLoader(false);
                 if(res.found) {
                     document.getElementById('student-result').style.display = 'block';
                     document.getElementById('res-name').innerText = res.name;
@@ -526,7 +630,9 @@
                 return { keyFee: f.keyFee, keyStat: f.keyStat, amount: val, status: stat };
             });
 
+            toggleLoader(true);
             callApi({ action: 'update', row: currentStudentRow, fees: updatedFees }).then(res => {
+                toggleLoader(false);
                 if(res.success) showNotif("Fees Updated Successfully!");
                 else showNotif("Error saving", "red");
             });
@@ -535,7 +641,9 @@
         // --- STUDENTS TAB & BULK ADD ---
 
         function loadStudents() {
+            toggleLoader(true);
             callApi({ action: 'getStudents' }).then(res => {
+                toggleLoader(false);
                 const tbody = document.getElementById('all-students-body');
                 tbody.innerHTML = "";
                 if(res.students && res.students.length > 0) {
@@ -662,11 +770,13 @@
             });
 
             // 3. Send API Request
+            toggleLoader(true);
             callApi({
                 action: 'addBulkStudents',
                 students: students,
                 initialFees: initialFees
             }).then(res => {
+                toggleLoader(false);
                 if(res.success) {
                     showNotif(res.message);
                     closeAddStudentModal();
@@ -722,7 +832,9 @@
 
         function saveAnnouncement() {
             const msg = document.getElementById('announce-input').value;
+            toggleLoader(true);
             callApi({ action: 'setAnnouncement', message: msg }).then(res => {
+                toggleLoader(false);
                 showNotif("Announcement Updated");
             });
         }
@@ -752,7 +864,9 @@
         function addNewFeeType() {
             const name = document.getElementById('new-fee-name').value;
             if(!name) return;
+            toggleLoader(true);
             callApi({ action: 'addNewFee', feeName: name }).then(res => {
+                toggleLoader(false);
                 if(res.success) {
                     showNotif("Fee Added");
                     document.getElementById('new-fee-name').value = "";
@@ -763,7 +877,9 @@
 
         function deleteFee(name) {
             if(!confirm("Are you sure? This will delete this fee column for ALL students.")) return;
+            toggleLoader(true);
             callApi({ action: 'removeFee', feeName: name }).then(res => {
+                toggleLoader(false);
                 if(res.success) {
                     showNotif("Fee Removed");
                     loadFeeSettingsList();
@@ -774,12 +890,16 @@
         function bulkUpdateFee(name) {
             const amt = prompt(`Enter new amount for ${name} for ALL students (Note: This overwrites existing values):`);
             if(amt === null) return;
+            toggleLoader(true);
             callApi({ action: 'bulkUpdateAmount', feeName: name, amount: amt }).then(res => {
                 if(res.success) {
                      // Auto update status too
                      callApi({ action: 'bulkUpdateStatus', feeName: name, status: (Number(amt)>0?'Pending':'Paid') }).then(r => {
+                         toggleLoader(false);
                          showNotif("Bulk Update Complete");
                      });
+                } else {
+                    toggleLoader(false);
                 }
             });
         }
@@ -815,9 +935,13 @@
             runSearch();
         }
 
-        // Init
+        // Init: Check Session Storage
         document.addEventListener('DOMContentLoaded', () => {
-             // Optional: check session
+             const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+             if(isLoggedIn === "true") {
+                 document.getElementById('login-overlay').style.display = 'none';
+                 loadDashboard();
+             }
         });
 
     </script>
